@@ -1,0 +1,264 @@
+﻿WIP Modular Server Proposal WIP                Page 
+Technical Writing Project Cover Sheet 
+
+
+
+
+
+
+ http://www.idevnews.com/views/images/uploads/general/wgu_logo.png 
+
+
+
+
+
+
+
+
+
+Capstone Proposal Project Name:
+	Modular Server
+	Student Name:
+	Bryan Ferris
+	Degree Program:
+	BS - Software Development
+	Student Mentor Name:
+	Tina Gillespie
+	
+
+________________
+Table of Contents
+Capstone Proposal Introduction        
+Review of Other Work        
+Project Rationale        
+Systems Analysis and Methodology        
+Goals and Objectives        
+Project Deliverables        
+Project Plan and Timelines        
+References        
+
+
+
+
+
+
+
+
+
+________________
+
+
+
+Capstone Proposal Introduction
+Servers have been used from the earliest days of computers. They take many forms: http servers for web browsers, ftp servers for file sharing, proprietary servers for specific business goals, and more. These servers perform a wide variety of functions, but they all have the same core: listen for requests on a network, process those requests, and possibly return some result to the sender and/or other parties. This project will specify a server which is truly generic; that is, all imaginable server implementations could be described in terms of this project. Accomplishing this involves three subprojects: Receptionist, Attendant, and Butler. Receptionist manages communication over the network, Attendant specifies an API that developers can implement to be compatible with this project, and Butler is a command line utility that aids System Administrators in managing and configuring their services.
+To better understand the utility of this project, it is useful to consider the perspective of (and relationship between) the two primary parties who would use this software: software developers and system administrators. Software developers use the Attendant API to rapidly create software modules that communicate over a network. System Administrators install Attendant modules to their machine and use use Butler to actively manage their installation.
+Consider a developer, Bob, who wants to implement an exciting new protocol, the Wayland protocol which was made to replace X Server. He looks at the Attendant API and sees that he won’t have to worry about writing any low-level socket code; he has to determine what to do with bytes that are read and sent, but she does not have to worry about the mechanics of sending and reading bytes over the network. After his Wayland project matures Bob looks for something else to work on; he decides that he wants to write an XMPP client for instant messaging. Having already learned the Attendant API, he is able to get this project ramped up quickly.
+Now consider a system administrator, Sarah, in a medium-sized business. She is setting up a machine that will double as a web server for their external website and a server that multiple thin clients in the business connect to. She is drawn to this project because she appreciates the benefits of using modular software and because the Butler utility gives her the power to control her server dynamically through a REPL as well as script about her server in a full-featured programming language, GNU Guile. She installs the project and downloads 3 modules: Bob’s Wayland and XMPP modules as well as a third-party http module. She uses Butler to configure the attendant searchpath `/root/attendant_modules/*.so’. She sets everything up but runs into a bug while configuring it: if she tries to listen on a port above 32768 it immediately crashes. She files a bug report in this project and a few days later it is fixed. In two months when the company decides that they want an internal FTP server for file sharing among employees she can be confident that she will not run into that bug again because the FTP Attendant module is based on the same code.
+I propose to develop these projects. I will start by building the Butler command-line utility, using an open source networking library (rather than implementing Receptionist first). During the development of Butler, I will reach a point where I need to specify the API that Attendant needs to implement in order to continue testing it. Once Butler and Attendant have started to mature I will replace the open-source library with my own implementation before continuing to add features to Attendant and Butler. More details can be found below, under “Goals and Objectives” and “Project Deliverables”.
+Review of Other Work
+        There are two categories of work that will be reviewed: intellectual papers and working programs. Intellectual papers provide either historical context for the strategies that have been used to successfully provide services or they provide theoretical frameworks to better understand the problem domain. Working programs provide concrete examples of how solutions to problems have been implemented.
+Professional Active Server Pages
+The Professional Active Server Pages discusses the history and theory of client-server architecture. The authors point out that client-server architecture has been present since the earliest days of computing (Holmes 2004a). As the computing industry evolved, different configurations of the client-server architecture were tried. In the beginning, users’ “PC’s” did not have computing power of their own; they were merely a tool for people to access the server, which did all of the computing. The computers used for connecting to the server are referred to as ‘dumb terminals’ or ‘thin clients’. As companies released smaller computers with more power, users were able to access computing power at their terminal which used to require a multi-room server. This led to a peer-to-peer architecture (p2p), where everyone had a copy of their own data but they could communicate with everyone else over the network. Essentially, in a p2p network everyone is a server and the servers talk to each other, instead of users. In order to solve some of the inherent problems with the p2p architecture, including redundant (possibly inconsistent) data, a hybrid solution was formed where a central file server keeps all of the data, but user terminals process the data. Modern networks try to strike a balance between the different architectures, by deciding which tasks should be processed by the server and which tasks should be processed by the client.
+There is no clear “best way” to architect a server for all situations. Different server models meet different needs. If a business wants to centralize computing power as much as possible to better track and manage this valuable resource, distributing thin clients to their employees makes sense. If a group of experts decide to create a startup with loosely defined roles it makes sense to use a peer-to-peer architecture. Many businesses of all sizes create hybrid architectures in an attempt to get ‘the best of both worlds’ on top of reducing bandwidth costs. A high-quality server library needs to accommodate any architecture that a business or individual might need.
+The authors describe the client-server architecture in more detail by defining the flow of information (Holmes 2004b):
+1. Data Capture
+2. Business Rules
+3. Application Interface
+4. Application Server
+Data begins at the Data Capture layer, where it is input to the system for the first time. It then travels through the Business Rules layer, which defines simple rules about the data. The authors warn against putting complex logic inside of the business rules layer (for instance, rules which require branching), but they do not make it clear why this practice is dangerous . It is possible that they want to keep this layer lean so that it can run on machines with low amounts of computing power, or that they view it as beneficial to keep this layer extremely stable in order to avoid maintenance costs. In the Application Interface layer the data is transformed from the form that was entered to a form that is more appropriate for processing. For instance, an email server might take the online form it was sent and store it in a database. The final layer, the application server layer, is responsible for processing the data. However, the authors point out that data can flow in either direction through this model - upward flow represents the computer returning data back to the user and that data being displayed in some way.
+In light of this observation, we can generalize their model by focusing on the data itself instead of describing who is using the data and how:
+1. Data Capture
+2. Data Validation
+3. Data Transformation
+4. Data Reception
+This form of the model gets rid of the details about who the entities interacting with the system are, similar to how UML diagrams treat computer users and human users the same. By shedding those details, this model focuses on the data itself. Data Capture can represent either a computer returning a result or a user inputting information. Data Reception can represent either processing the data or displaying it in a user interface; either way, a response might be sent. It is fairly straightforward to translate this process into code; each step in the process defines a hook that the administrator/developer can plug code into. Data Input will normally have a module that either reads bytes from the network or displays an interface to a local user. Data Validation and Data Transformation are more-or-less unchanged from Business Rules and Application Interface, they were simply renamed to focus on the data being transmitted. Data Reception will have a module that either processes data to come up with a result or displays the information to a local user. This allows the same model to be used to represent client-server architectures, peer-to-peer architectures, and hybrid architectures. This model will be referred to as the “Modified PASP Model,” or MPM for short.
+E-Commerce on the Cloud: Issues, Attacks & Security
+(Lokhande 2013)
+Apache HTTP Server
+Apache Server is the most common http server implementation in use on the internet (July 2016 Web Server Survey 2016). It is a modular server which allows developers to write their own code and plug it into the server. In order to do this, a developer can write a function in c which returns an int and takes in a request_rec, a structure that Apache uses to represent an http request (Kew 2006). Additionally, the server must be configured to call the function and the module must register itself as a hook. Then, the apxs utility included with Apache can be used to compile the module in a format that Apache can use. Once this is done and the server is running, a user may access the module by making the appropriate request to the server.
+Apache allows businesses to provide web pages and other services over the http protocol more quickly than if they had to build everything from scratch. Needless to say it has become a requirement for all but the smallest businesses to have, at a bare minimum, a website providing information to their customers. It is also expected by many consumers that a website provides the ability to schedule appointments, place orders, or perform other activities which are easily automated. Additionally, a 2016 study found that the availability of an intranet for communication made employees view the company as significantly more supportive (Uysal). This is not because of an increase in the number of people offering support, but because of an increase in impact of those who do. Being able to provide services over a network is a valuable business function that the Apache server enables.
+The Apache Server has proven itself to be a valuable tool for many businesses, but how does it fit within the Modified PASP Model? As a modular http server it can fulfill all of the steps in the MPM. It provides the facilities for users to send data over the network, and the fact that modules are implemented in c means that any other functionality (for example, a GUI to interact with a connection) can be programmed by developers.
+However, Apache is not without its limitations. It requires that code be compiled with apxs, a tool distributed with Apache. Apache could define a more generic way to access modules which would be more flexible in terms of implementation language than the way it currently works. Additionally, it only allows for communication with http. Other protocols, such as ftp are sometimes desirable, and there are use cases where custom protocols need to be created in order to accommodate special needs, such as developers of MMO games who have strict requirements for latency and bandwidth. Apache could be a significantly more versatile server if it wasn’t coupled to http (and it does not have to sacrifice http functionality to achieve this).
+Project Rationale
+        Receptionist is a networking library which abstracts over the network. The initial motivation for creating it is that it makes my life easier; in order to use Attendants the Butler needs to know how to talk over the network. It evolved into a separate subproject because it is clearly a separate unit of functionality (there will be a defined interface between Receptionist and Butler, they are not tightly coupled) and it makes sense to provide access to this so that others can take advantage of it as well.
+        The other two subprojects, Butler and Attendant, combine into a piece of middleware that makes it easier for developers to deliver functionality to system administrators, making life better for both parties. Developers can program to an API without having to worry about how admins manage their program; they only have to focus on the functionality itself. Admins can control and configure all of their services through a common interface, reducing the learning curve on adopting new services.
+Systems Analysis and Methodology
+        The project is currently in pre-production. The goals have been identified and some thought has been put into the organization of the product, but construction has not started yet. In order to meet the goals of this project, I plan on borrowing methods from Scrum; since it is a solo project some of the concepts like stand-up meetings do not apply, but others such as the backlog are still useful. I plan on using the website Slack to keep track of my goals. I have used slack in the past to manage projects. It has a simple, intuitive, and flexible interface for tracking goals and the progress made on them. 
+        A backlog for the project is listed in the “Project Deliverables” section below. This is not supposed to be an exhaustive list, as new items are always added to the backlog during the construction of a program as hidden requirements become visible. However, it should server as a good starting point.
+Goals and Objectives
+        There are two goals for this project: streamline the process of delivering server functionality to system administrators and decrease the learning curve for admins to learn new modules. Receptionist is more associated with the first goal, Butler is more associated with the second goal, and Attendant is the glue between them (it is equally concerned with both goals).
+Receptionist is responsible for responding to new connection requests by redirecting them to an open port where they will be served by a module that the system administrator has plugged in. Note that the protocol being used does not belong in the server component, but the service manager component. For instance, a server which serves web pages with http might also want an X Server in order to provide a desktop to the administrator. There is no reason for these two components of the system to maintain separate code bases for basic server functionality.
+The Attendant subproject is a specification of how to prepare a service for use in this project (ie implement a module that can be plugged in).  Attendants are modules of the server that provide functionality. They can be implemented in any language that supports exporting to c bindings; Attendant modules should not need to have dependencies on Receptionist or Butler.
+Butler is a command line utility which allows an administrator to manage and configure the Receptionist. It will be written in GNU Guile, a project that prominently features an implementation of Scheme Lisp.  Due to the nature of GNU Guile, Butler’s implementation language, Butler can also serve as a library for other guile programs. It allows system administrators to manage the server by providing the ability to stop, start, and restart the server. It allows both dynamic and static configuration of the listening port, the allowed connection ports, and the searchpath to find Attendant files.
+Project Deliverables
+        There are 5 main deliverables for this project, and 1 potential deliverable. The 5 main deliverables are: Receptionist, Butler, Attendant, Tutorials, and Specification. The potential deliverable is a Windows port, which may or may not be implemented depending on how the project goes. The details of what each deliverable contains are specified below in terms of backlogs.
+        The backlogs are organized in two different ways. At the top level, they are organized by which deliverable the tasks in the backlog is associated with. Within each deliverable, there are up to three backlogs: minimum, expected, and stretch. The minimum backlogs define what is needed for a proof-of-concept. The expected backlog defines what is needed for an initial prototype. The optional stretch backlog lists features which will be implemented if all expected backlogs are completed ahead-of-schedule.
+Receptionist Backlog (c server library)
+Minimum
+* Use premade networking library
+
+
+This backlog only requires me to learn a networking API enough to implement this project. I will be studying the Boost API, which is well-documented and has a large community supporting it. I will need to read the documentation and build some toy programs to solidify my knowledge in the allotted time.
+
+
+Expected
+* Design and implement API for reading/writing networking data
+   * This is an abstraction over low-level networking code (eg sockets)
+* Define protocol for initiating a connection with the server
+* Migrate connection from listening port to auxiliary port
+
+
+At this point in the project I should have a good understanding of what the Receptionist API needs in order to fulfill the requirements of Butler. Most of the development time on this backlog will probably be spent debugging any problems that arise in the custom implementation.
+Butler Backlog (Guile server manager)
+Minimum
+* Start listening on a specified port
+* Dynamically set which files to search for functions
+* Load the proper Attendant based on network requests
+
+
+        This backlog will require me to wrap the library I learned in the Receptionist backlog in a c interface which is accessible to Guile code. In the implementation of the minimum backlog, there may be some logic in Butler that will be factored out into Receptionist during the implementation of the expected backlogs. It will also require me to write the code that finds functions in Attendant files and calls them with the appropriate connection argument.
+
+
+Expected
+* Make the search path for file searching read glob syntax
+* Provide commands for configuration of services
+
+
+Allowing glob syntax is a convenience to administrators. This should not be difficult as linux provides a glob function as a c function, which can easily be called from Guile. Even though Butler has a dependency on Receptionist, it makes sense to implement the expected Butler backlog first because the minimum Reception meets all of the needs of the expected Butler and this task is straightforward and should be fast to implement.
+
+
+Stretch
+* Generate c bindings for all Butler functions
+Attendant Backlog (API for creating services)
+Minimum
+* Specify the format of Attendants required for Butler to load modules
+* Hello World Attendant (sends hello world message in response to everything)
+
+
+        This backlog is being completed in parallel with the Butler minimum backlog. This is because the development of each will inform the other. The ‘Hello World’ example will be the last thing built between both of the backlogs
+
+
+Expected
+* Specify the format of Attendants required for Butler to configure modules
+* Echo Attendant (implementation of an echo server)
+
+
+If the previous backlogs have been successfully completed this step should be simple to complete. It merely requires using the Attendant API to read and send data, with no real processing involved.
+
+
+Stretch
+* http/ftp infrastructure attendants
+   * These are available for other people to use that http/ftp code is shared. Services can be plugged into them in a fashion similar to the way Attendants themselves work.
+Tutorial Backlog
+Minimum
+* Nothing
+Expected
+* Hello World tutorial
+
+
+        The hello world tutorial is best accomplished while I am building the hello world attendant. The tutorial can essentially be seen as a report on what I did while building the hello world attendant and explicitly writing out the steps that I take might lead me to discover beneficial ways to refactor the code.
+
+
+Stretch
+* Tutorial on using the http/ftp infrastructure attendants (see Attendant stretch backlog)
+Specification Backlog
+Minimum
+* Fully document the source files with comments
+
+
+I will comment the code as I write it. This should go without saying, though it does not.
+
+
+Expected
+* Receptionist API documentation
+   * Specification of the most commonly used functions
+   * Refer to header files for more information
+* Butler command documentation
+   * Specification of most commonly used commands
+   * Refer reader to header files for more information
+* Document Attendant File Format
+   * Specify the file format required for Attendants
+
+
+        I will have spent a great deal of time working with the project at this point. This backlog will involve me formalizing that knowledge in a way consumable by other people.
+
+
+Stretch
+* Receptionist API documentation
+   * Fully specify every function
+* Butler command documentation
+   * Fully specify every function
+Windows Port Backlog
+Minimum
+* No work done on Windows port
+Expected
+* Memo on the work needed for a successful Windows port
+
+
+        I will be taking notes about all Linux dependencies as I work. Completing this backlog will merely require me to organize those notes into a form consumable by other people
+
+
+Stretch
+* Fully implemented Windows port
+Project Plan and Timelines
+        Receptionist and Attendant are both dependencies of Butler. Receptionist will be constructed before Butler for this reason, but Attendant and Butler will be developed in parallel. This is because Attendant is not an implementation but rather the specification of an interface. The construction of Butler will inform the design of Attendant.
+        Minimum requirements vs expected requirements also needs to be considered.
+        Note that there is overlap on the deliverables. Some elements of the project will be developed in parallel, so that the construction of each component can inform the construction of others. Additionally, some parts of the backlog go hand-in-hand with other parts; for instance, it makes sense to fulfill the specification requirement of fully commenting files while writing the files, rather than commenting after the fact. A more detailed discussion of the requirements of each backlog section can be found below the table.
+
+
+Project Deliverable or Milestone
+	Duration
+	Planned Start Date
+	Planned End Date
+	Minimum Backlog: Receptionist
+	1 day
+	November 9
+	November 9
+	Minimum Backlog: Butler
+	3 days
+	November 10
+	November 12
+	Minimum Backlog: Attendant
+	2 days
+	November 11
+	November 12
+	Expected Backlog: Tutorials
+	1 day
+	November 12
+	November 12
+	Minimum Backlog: Specification
+	4 days
+	November 9
+	November 12
+	Expected Backlog: Butler
+	2 days
+	November 13
+	November 14
+	Expected Backlog: Receptionist
+	3 days
+	November 15
+	November 17
+	Expected Backlog: Attendant
+	1 day
+	November 18
+	November 18
+	Expected Backlog: Specification
+	2 days
+	November 19
+	November 20
+	Expected Backlog: Windows Port
+	1 day
+	November 21
+	November 21
+	
+
+________________
+References
+
+
+Homer, A., Enfield, A., Gross, C., Jakab, S., Hartwell, B., Gill, D., . . . Harrison, R. (2004a). The Background to Client/Server. Retrieved October 31, 2016, from https://msdn.microsoft.com/en-us/library/ms952642.aspx
+Homer, A., Enfield, A., Gross, C., Jakab, S., Hartwell, B., Gill, D., . . . Harrison, R. (2004b). The Theory of Client Server. Retrieved October 31, 2016, from https://msdn.microsoft.com/en-us/library/ms952652.aspx
+July 2016 Web Server Survey. (2016, July 19). Retrieved September 3, 2016, from https://web.archive.org/web/20160810054429/http://news.netcraft.com/archives/2016/07/19/july-2016-web-server-survey.html
+Kew, N. (2006, October 3). A look at Apache modules. Retrieved November 03, 2016, from http://www.theregister.co.uk/2006/10/03/apache_modules/
+Lokhande, P. p., & Meshram, B. b. (2013). E-Commerce on Cloud: Issues, Attacks & Security. International Journal Of Advanced Research In Computer Science, 4(2), 344-350.
+Uysal, N. (2016). Social Collaboration in Intranets: The Impact of Social Exchange and Group Norms on Internal Communication. International Journal Of Business Communication, 53(2), 181-199. doi:10.1177/2329488415627270
