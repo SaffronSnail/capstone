@@ -1,0 +1,39 @@
+(define-module (saffronsnail capstone butler)
+               #:export (run-butler)
+)
+
+(define* (run-butler #:key (port 8080))
+    (migrate (listen-on-port port))
+    (run-butler #:port port)
+)
+
+(define (migrate connection)
+  (let ((new-port (next-port)))
+    (listen-for-attendant-request connection)
+    (send-new-port                connection new-port)
+    (initialize-attendant         new-port)
+  )
+)
+
+(define (listen-on-port port)
+  (error "TODO: implement listen-on-port")
+)
+
+(define (next-port)
+  (error "TODO: implement next-port")
+)
+
+(define (listen-for-attendant-request connection)
+  (error "TODO: implement listen-for-attendant-request")
+)
+
+(define (send-new-port connection new-port)
+  (error "TODO: implement send-new-port")
+)
+
+(define (initialize-attendant new-port)
+  (error "TODO: implement initialize-attendant")
+)
+
+(run-butler)
+
