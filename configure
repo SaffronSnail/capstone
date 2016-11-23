@@ -1,4 +1,4 @@
 #! /bin/sh
 
-sed -i -e "s/prefix=.*/prefix=${1:9}/" makefile
+sed -i -e "s|BUTLER_LOC=.*/bin|BUTLER_LOC=${1:9}/bin|" makefile
 
