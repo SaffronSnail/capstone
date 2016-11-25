@@ -1,0 +1,9 @@
+This project uses Habitat for build management. In order to build it, ensure that Habitat is installed (https://www.habitat.sh) then run the following commands:
+
+hab pkg build .
+sudo hab pkg install ./results/saffronsnail-capstone-<VERSION>-<TIMESTAMP>-<ARCHITECTURE>-<OS>.hart
+
+Note that you will need to replace the words in angle brackets with the appropriate information.
+
+After running these commands there should exist a folder /hab/pkgs/saffronsnail/capstone/<VERSION>/<TIMESTAMP>. This is the root directory of the results of the build.
+

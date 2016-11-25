@@ -25,3 +25,9 @@ do_unpack() {
   mv $pkg_name $HAB_CACHE_SRC_PATH/$pkg_dirname
 }
 
+do_build() {
+  sed -i -e "s|PACKAGE_PREFIX=|PACKAGE_PREFIX=${pkg_prefix}|" makefile
+  sed -i -e "s|SERVICE_PREFIX=|SERVICE_PREFIX=${pkg_svc_path}|" makefile
+  make
+}
+

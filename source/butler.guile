@@ -1,3 +1,6 @@
+#! /bin/guile
+!#
+
 (define-module (saffronsnail capstone butler)
                #:export (run-butler)
 )
