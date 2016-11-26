@@ -12,6 +12,9 @@
 typedef struct EntranceRequest  EntranceRequest;
 typedef struct EntranceResponse EntranceResponse;
 
+// The maximum length that an attendant's name can be
+extern const int ATTENDANT_NAME_LENGTH;
+
 // EntranceRequest functions
 EntranceRequest *create_entrance_request(const char *attendant_name);
 EntranceRequest *read_entrance_request  (const char *data, int data_length);
