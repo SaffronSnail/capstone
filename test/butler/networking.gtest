@@ -1,0 +1,84 @@
+#pragma once
+
+extern "C"
+{
+#include "networking.h"
+}
+
+#include <fstream>
+#include <sstream>
+
+#include "log.h"
+
+using std::ifstream;
+using std::stringstream;
+
+void *recieve_datagram_pthread(void *listener_input_pointer);
+bool  start_listener_in_new_thread(int port, pthread_t *started, Datagram *expected);
+
+struct ListenerInput
+{
+  int port;
+  Datagram receive;
+};
+
+TEST(udp, send_and_recieve)
+{
+  static const int port = 8080;
+
+  // this buffer MUST contain a c-string
+  char buffer[] = "this is some data\n";
+
+  log << "reading in the file..." << endl;
+  Datagram to_send;
+  to_send.data = buffer;
+  to_send.length = sizeof(buffer);
+  log << "file contained |" << buffer << "|!" << endl;
+
+  // start the listener
+  Datagram to_receive;
+  pthread_t listener_thread;
+
+  log << "starting to listen..." << endl;
+  ASSERT_TRUE(start_listener_in_new_thread(port, &listener_thread, &to_receive)) << "Could not create listener thread!";
+  log << "listening!" << endl;
+
+  // sleep to ensure (but not really...) that we start listening before we send
+  sleep(1);
+
+  // send the datagram
+  log << "Sending the datagram..." << endl;
+  if (!send_datagram(to_send, "127.0.0.1", port))
+    FAIL() << "Failed to send datagram!";
+  log << "Sent!" << endl;
+
+  log << "Joining the thread..." << endl;
+  // check that the correct data was received
+  if (pthread_join(listener_thread, NULL) != 0)
+    FAIL() << "Failed to join the listener thread!";
+  log << "Thread joined!" << endl;
+
+  ASSERT_STREQ(to_send.data, to_receive.data);
+}
+
+void *recieve_datagram_pthread(void *in)
+{
+  std::cerr << "beginning of recieve" << std::endl;
+  ListenerInput *input = static_cast<ListenerInput *>(in);
+  input->receive = receive_datagram(input->port);
+  std::cerr << "end of recieve" << std::endl;
+  return NULL;
+}
+
+bool start_listener_in_new_thread(int port, pthread_t *started, Datagram *receive)
+{
+  ListenerInput input;
+  input.port = port;
+
+  if (pthread_create(started, NULL, recieve_datagram_pthread, &input) != 0)
+    return false;
+
+  *receive = input.receive;
+  return true;
+}
+
