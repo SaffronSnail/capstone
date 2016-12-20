@@ -20,12 +20,14 @@ typedef struct
 // implemented for
 typedef struct Connection Connection;
 
+typedef unsigned PORT;
+
 // Blocks until a new connection is recieved on the given port
-Connection *wait_for_connection(unsigned port);
+Connection *wait_for_connection(PORT port);
 
 // Connects to the given host on the given port. Returns NULL if connection
 // can't be made.
-Connection *connect_to_host(const char *host, unsigned port);
+Connection *connect_to_host(const char *host, PORT port);
 
 // blocks until the buffer is full (TODO: redsign this function...)
 void receive_data(Connection *, const char *buffer, int buffer_size);
@@ -35,5 +37,5 @@ void send_data(Connection *, Datagram data);
 
 /* NON-CONNECTION BASED */
 Datagram receive_datagram(unsigned port);
-bool send_datagram(Datagram data, const char *host, unsigned port);
+bool send_datagram(Datagram data, const char *host, PORT port);
 

@@ -13,72 +13,62 @@ extern "C"
 using std::ifstream;
 using std::stringstream;
 
-void *recieve_datagram_pthread(void *listener_input_pointer);
+void *receive_datagram_pthread(void *listener_input_pointer);
 bool  start_listener_in_new_thread(int port, pthread_t *started, Datagram *expected);
 
 struct ListenerInput
 {
-  int port;
+  PORT port;
   Datagram receive;
 };
 
-TEST(udp, send_and_recieve)
+TEST(udp, send_and_receive)
 {
   static const int port = 8080;
 
   // this buffer MUST contain a c-string
-  char buffer[] = "this is some data\n";
+  char buffer[] = "this is some data";
 
-  log << "reading in the file..." << endl;
+  log("reading in the file...");
   Datagram to_send;
   to_send.data = buffer;
   to_send.length = sizeof(buffer);
-  log << "file contained |" << buffer << "|!" << endl;
+  log("file contained |%s|!", buffer);
 
-  // start the listener
-  Datagram to_receive;
+  log("starting to listen...");
+  ListenerInput listener_input;
+  listener_input.port = port;
+
   pthread_t listener_thread;
+  if (pthread_create(&listener_thread, NULL, receive_datagram_pthread,
+                     &listener_input) != 0
+     )
+    FAIL() << "Failed to send datagram!";
 
-  log << "starting to listen..." << endl;
-  ASSERT_TRUE(start_listener_in_new_thread(port, &listener_thread, &to_receive)) << "Could not create listener thread!";
-  log << "listening!" << endl;
+  log("listening!");
 
   // sleep to ensure (but not really...) that we start listening before we send
+  // TODO: actually ensure this
   sleep(1);
 
-  // send the datagram
-  log << "Sending the datagram..." << endl;
+  log("Sending the datagram...");
   if (!send_datagram(to_send, "127.0.0.1", port))
     FAIL() << "Failed to send datagram!";
-  log << "Sent!" << endl;
+  log("Sent!");
 
-  log << "Joining the thread..." << endl;
-  // check that the correct data was received
+  log("Joining the thread...");
   if (pthread_join(listener_thread, NULL) != 0)
     FAIL() << "Failed to join the listener thread!";
-  log << "Thread joined!" << endl;
+  log("Thread joined!");
 
-  ASSERT_STREQ(to_send.data, to_receive.data);
+  ASSERT_STREQ(to_send.data, listener_input.receive.data);
 }
 
-void *recieve_datagram_pthread(void *in)
+void *receive_datagram_pthread(void *in)
 {
-  std::cerr << "beginning of recieve" << std::endl;
   ListenerInput *input = static_cast<ListenerInput *>(in);
+  log("passing in port %u", input->port);
   input->receive = receive_datagram(input->port);
-  std::cerr << "end of recieve" << std::endl;
   return NULL;
-}
-
-bool start_listener_in_new_thread(int port, pthread_t *started, Datagram *receive)
-{
-  ListenerInput input;
-  input.port = port;
-
-  if (pthread_create(started, NULL, recieve_datagram_pthread, &input) != 0)
-    return false;
-
-  *receive = input.receive;
-  return true;
 }
 

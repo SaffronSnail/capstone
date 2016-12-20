@@ -1,6 +1,13 @@
 #include "log.h"
 
-#include <iostream>
+#include <stdarg.h>
+#include <stdio.h>
 
-std::ostream &log = std::cerr;
+void log(const char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  fprintf(stderr, "\n");
+}
 

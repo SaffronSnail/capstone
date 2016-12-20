@@ -25,7 +25,7 @@ typedef int SOCKET;
 #define BYTE_MAX 511
 
 /* CONNECTOIN BASED */
-Connection *wait_for_connection(unsigned port)
+Connection *wait_for_connection(PORT port)
 {
   (void)port;
   fprintf(stderr, "TODO: Implement wait_for_connection");
@@ -33,7 +33,7 @@ Connection *wait_for_connection(unsigned port)
 }
 
 void print_error_message(const char *fn_name, const char *filename, int line,
-                         const char *host, unsigned port, const char *message)
+                         const char *host, PORT port, const char *message)
 {
   fprintf(stderr, "Error with host %s on port %d in function %s file %s:%d!\n",
           host, port, fn_name, filename, line);
@@ -63,7 +63,7 @@ void send_data(Connection *this, Datagram data)
 }
 
 /* CONECTIONLESS */
-SOCKET create_datagram_socket(const char *host, unsigned port, addrinfo *hints,
+SOCKET create_datagram_socket(const char *host, PORT port, bool listener,
                               addrinfo **res);
 
 /**
@@ -75,7 +75,7 @@ SOCKET create_datagram_socket(const char *host, unsigned port, addrinfo *hints,
  * @return the datagram that was recieved. If there is an error will return a
  * datagram with data set to NULL and a length of 0.
  */
-Datagram receive_datagram(unsigned port)
+Datagram receive_datagram(PORT port)
 {
   // return variable
   Datagram ret;
@@ -83,10 +83,9 @@ Datagram receive_datagram(unsigned port)
   ret.length = 0;
 
   const char *host = NULL;
-  addrinfo hints, *res;
+  addrinfo *res;
 
-  hints.ai_flags = AI_PASSIVE;
-  SOCKET sock = create_datagram_socket(NULL, port, &hints, &res);
+  SOCKET sock = create_datagram_socket(NULL, port, true, &res);
 
   if (bind(sock, res->ai_addr, res->ai_addrlen) == -1)
     ERR("receive_datagram", host, port);
@@ -135,7 +134,7 @@ Datagram receive_datagram(unsigned port)
  *
  * @return true if the data was successfully sent, otherwise false
  */
-bool send_datagram(Datagram data, const char *host, unsigned port)
+bool send_datagram(Datagram data, const char *host, PORT port)
 {
   if (data.length > BYTE_MAX)
   {
@@ -151,8 +150,8 @@ bool send_datagram(Datagram data, const char *host, unsigned port)
   buffer[data.length + 1] = '\n';
 
   // boilerplate
-  addrinfo hints, *res;
-  SOCKET sock = create_datagram_socket(host, port, &hints, &res);
+  addrinfo *res;
+  SOCKET sock = create_datagram_socket(host, port, false, &res);
   if (sock != -1)
   {
     // send the data
@@ -190,10 +189,8 @@ bool send_datagram(Datagram data, const char *host, unsigned port)
  * caller wnats to send datagrams then this should be the port that sends
  * data.
  *
- * @param hints This structure is passed to getaddrinfo. The only variable that
- * should be set is ai_flags; this filed may have additional flags added to it,
- * while every other variable may be overwritten. For details on available
- * flags, `man getaddrinfo`
+ * @param listener Should be true if the caller will use the returned socket
+ * for listening, and false if the caller will use it for sending.
  *
  * @param res This is passed to getaddrinfo, and the result after getaddrinfo
  * will be passed to socket. No data needs to be set in this stucture. For more
@@ -202,25 +199,28 @@ bool send_datagram(Datagram data, const char *host, unsigned port)
  * @return Upon success returns the file descriptor of the newly opened
  * socket. Upon failure returns -1 and prints an error message to sderr.
  */
-SOCKET create_datagram_socket(const char *remote_host, unsigned port,
-                         addrinfo *hints, addrinfo **res)
+SOCKET create_datagram_socket(const char *remote_host, PORT port,
+                              bool listener, addrinfo **res)
 {
   // return variable
   SOCKET sock = -1;
 
   // perpare hints
-  int given_hints = hints->ai_flags;
-  memset(hints, 0, sizeof(*hints));
-  hints->ai_family = AF_UNSPEC;
-  hints->ai_socktype = SOCK_DGRAM;
-  hints->ai_flags = given_hints | AI_ADDRCONFIG;
+  addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_DGRAM;
+
+  hints.ai_flags = AI_ADDRCONFIG;
+  if (listener)
+    hints.ai_flags |= AI_PASSIVE;
 
   char str_port[6];
   memset(str_port, 0, sizeof(str_port));
   utoa(port, str_port);
 
   // create teh socket
-  int err = getaddrinfo(remote_host, str_port, hints, res);
+  int err = getaddrinfo(remote_host, str_port, &hints, res);
   if (err != 0)
   {
     // getaddrinfo only sometimes uses errno; gai_strerror takes this into

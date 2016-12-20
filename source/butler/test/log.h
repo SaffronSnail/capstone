@@ -1,7 +1,4 @@
 #pragma once
 
-#include <ostream>
-
-using std::endl;
-extern std::ostream &log;
+void log(const char *format, ...);
 
