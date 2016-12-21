@@ -6,22 +6,80 @@
  * tells the user what port the attendant is listening on
  */
 
-// The two fundamental data types for the Entrance protocol are the request
-// and the response; this protocol should not require more than these two
-// messages are passed
-typedef struct EntranceRequest  EntranceRequest;
+/**
+ * @brief The EntranceRequest is sent by the client to the server to indicate
+ * (1) that it wants a connection and (2) which kind of attendant it wants to
+ * tend to the connection
+ */
+typedef struct EntranceRequest EntranceRequest;
+
+/**
+ * @brief The EntranceResponse is sent by the server to the client after it
+ * processes an EntranceRequest. It tells the lient 
+ */
 typedef struct EntranceResponse EntranceResponse;
 
-// The maximum length that an attendant's name can be
+/**
+ * @brief The maximum length that an attendant's name can be
+ */
 extern const int ATTENDANT_NAME_LENGTH;
 
-// EntranceRequest functions
-EntranceRequest *create_entrance_request(const char *attendant_name);
-EntranceRequest *read_entrance_request  (const char *data, int data_length);
-const char      *get_attendant_name     (EntranceRequest *);
+/** \defingroup EntranceRequest
+ * @{
+ */
 
-// EntranceResponse functions
-EntranceResponse *create_entrance_response(int port);
-EntranceResponse *read_entrance_response  (const char *data, int data_length);
-int               get_port                (EntranceResponse *);
+/**
+ * @brief creates an EntranceRequest and send it to the specified host and
+ * port. Blocks until a response is received.
+ *
+ * @param attendant_name The name of the attendent you are requesting
+ * @param host the name (IP address, URL, etc.) of the server
+ * @param port the port the server is listening on
+ */
+EntranceResponse *send_entrance_request(const char *attendant_name,
+                                        const char *host,
+                                        unsigned port);
+
+/**
+ * @brief Blocks until a message is received on the given port; it is assumed
+ * to be a valid request for an attendant.
+ *
+ * @param port the port to listen on
+ *
+ * @return a pointer to the data about the request; the caller is responsible
+ * for freeing this data wit hteh free_entrance_request function, below
+ */
+EntranceRequest *receive_entrance_request(unsigned port);
+
+/**
+ * @brief frees the memory associated with the entrance request and sets the
+ * pointer to NULL
+ *
+ * @param the memory that should be freed/pointer that should be set to NULL
+ */
+void free_entrance_request(EntranceRequest **target);
+
+/**@}*/ //EntranceRequest group
+
+/** \definegroup EntranceResponse
+ * @{
+ */
+
+/**
+ * @brief Notifies the send of the port that is listening
+ *
+ * @param respondee The request that is being responded to
+ * @param port the port that is being listened on
+ */
+void send_entrance_response(EntranceRequest *respondee, unsigned port);
+
+/**
+ * @brief frees the memory associated with the entrance responseand sets the
+ * pointer to NULL
+ *
+ * @param the memory that should be freed/pointer that should be set to NULL
+ */
+void free_entrance_response(EntranceResponse **target);
+
+/**@}*/ //EntranceResponse group
 
