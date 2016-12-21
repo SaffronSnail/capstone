@@ -22,8 +22,6 @@ typedef struct sockaddr_storage sockaddr_storage;
 
 typedef int SOCKET;
 
-#define BYTE_MAX 511
-
 /* CONNECTOIN BASED */
 Connection *wait_for_connection(PORT port)
 {
@@ -77,9 +75,9 @@ SOCKET create_datagram_socket(const char *host, PORT port, bool listener,
  */
 Datagram receive_datagram(PORT port)
 {
-  // return variable
+  // return variable with reasonable defaults
   Datagram ret;
-  ret.data   = NULL;
+  memset(ret.data, 0, sizeof(ret.data));
   ret.length = 0;
 
   const char *host = NULL;
@@ -91,7 +89,8 @@ Datagram receive_datagram(PORT port)
     ERR("receive_datagram", host, port);
   else
   {
-    char buffer[BYTE_MAX + 2];
+    // static so that we don't put such a large amount of memory on the stack
+    static char buffer[MAX_MESSAGE_LENGTH_MACRO + 2];
     memset(buffer, 0, sizeof(buffer));
 
     sockaddr_storage src_addr;
@@ -108,10 +107,7 @@ Datagram receive_datagram(PORT port)
                       sizeof(buffer));
     else
     {
-      char *data = malloc(sizeof(char) * count);
-      memcpy(data, buffer, count);
-
-      ret.data = data;
+      memcpy(ret.data, buffer, count);
       ret.length = count;
     }
   }
@@ -136,13 +132,14 @@ Datagram receive_datagram(PORT port)
  */
 bool send_datagram(Datagram data, const char *host, PORT port)
 {
-  if (data.length > BYTE_MAX)
+  if (data.length > MAX_MESSAGE_LENGTH)
   {
-    fprintf(stderr, "Error! Can only send %d bytes of data!", BYTE_MAX);
+    fprintf(stderr, "Error! Can only send %zu bytes of data!",
+        MAX_MESSAGE_LENGTH);
     return false;
   }
 
-  static char buffer[BYTE_MAX + 2];
+  static char buffer[MAX_MESSAGE_LENGTH_MACRO + 2];
 
   // initialize the buffer
   memset(buffer, 0, sizeof(buffer));

@@ -31,7 +31,7 @@ TEST(udp, send_and_receive)
 
   log("reading in the file...");
   Datagram to_send;
-  to_send.data = buffer;
+  memcpy(to_send.data, buffer, strlen(buffer));
   to_send.length = sizeof(buffer);
   log("file contained |%s|!", buffer);
 

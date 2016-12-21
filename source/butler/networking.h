@@ -9,11 +9,19 @@
  * being as low-level as possible.
  */
 
+/**
+ * @brief We need a #define for this value because c doesn't always understand
+ * that constants are constant when declaring arrays
+ */
+#define MAX_MESSAGE_LENGTH_MACRO 1023
+const size_t MAX_MESSAGE_LENGTH = MAX_MESSAGE_LENGTH_MACRO;
+
 typedef struct
 {
-  const char *data;
+  char data[MAX_MESSAGE_LENGTH_MACRO];
   size_t length;
 } Datagram;
+
 
 /* CONNECTION-BASED */
 // This contains the information necesarry for the platform the code is
