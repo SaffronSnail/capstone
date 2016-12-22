@@ -1,0 +1,63 @@
+#pragma once
+
+extern "C"
+{
+#include "entrance-protocol.h"
+#include "networking-pthread.h"
+}
+
+#include "log.h"
+
+#define UNIMPLEMENTED FAIL() << "This test has not been implemented yet!"
+
+TEST(EntranceProtocol, SendRequest)
+{
+  const char attendant_name[] = "ATTENDANT_NAME";
+  const unsigned send_port = 8080;
+  const unsigned recv_port = 8081;
+
+  log("starting to listen...");
+  ListenerInput listener_input;
+  listener_input.port = recv_port;
+
+  pthread_t listener_thread;
+  if (pthread_create(&listener_thread, NULL, receive_datagram_pthread,
+                     &listener_input)
+     )
+    FAIL() << "Failed to start listening!";
+  log("Listening!");
+
+  log("sleep to ensure (but not really...) that we start listening before "
+      "we send");
+  // TODO: actually ensure that we start listening before sending somehow
+  sleep(1);
+  log("*yawns* I'm awake!");
+
+  log("sending the entrance request...");
+  send_entrance_request(attendant_name, "127.0.0.1", recv_port, send_port);
+  log("Entrance request sent!");
+  
+  log("joining the listener thread...");
+  if (pthread_join(listener_thread, NULL) != 0)
+    FAIL() << "Failed to send datagram!";
+  log("Thread joined!");
+
+  ASSERT_STREQ(attendant_name,
+     get_attendant_name((EntranceRequest *)listener_input.receive.data));
+}
+
+TEST(EntranceProtocol, ReceiveRequest)
+{
+  UNIMPLEMENTED;
+}
+
+TEST(EntranceProtocol, SendResponse)
+{
+  UNIMPLEMENTED;
+}
+
+TEST(EntranceProtocol, ReceiveResponse)
+{
+  UNIMPLEMENTED;
+}
+

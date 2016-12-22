@@ -172,7 +172,6 @@ bool send_datagram(Datagram data, const char *host, PORT port)
   return true;
 }
 
-
 /**
  * @brief Factors out common code between {send,receive}_datagram. It is
  * responsible for reserving a socket on the system for use by the caller. On

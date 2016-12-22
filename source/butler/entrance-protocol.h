@@ -37,10 +37,12 @@ extern const int ATTENDANT_NAME_LENGTH;
  *
  * @param attendant_name The name of the attendent you are requesting
  * @param host the name (IP address, URL, etc.) of the server
- * @param port the port the server is listening on
+ * @param remote_port the port the server is listening on
+ * @param local_port the port that the server should send the EntranceResponse
+ * to
  */
 void send_entrance_request(const char *attendant_name, const char *host,
-                           unsigned port);
+                           unsigned remote_port, unsigned local_port);
 
 /**
  * @brief Blocks until a message is received on the given port; it is assumed
@@ -52,6 +54,8 @@ void send_entrance_request(const char *attendant_name, const char *host,
  * for freeing this data wit hteh free_entrance_request function, below
  */
 EntranceRequest *receive_entrance_request(unsigned port);
+
+const char *get_attendant_name(const EntranceRequest *);
 
 /**
  * @brief frees the memory associated with the entrance request and sets the

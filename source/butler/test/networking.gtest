@@ -2,7 +2,7 @@
 
 extern "C"
 {
-#include "networking.h"
+#include "networking-pthread.h"
 }
 
 #include <fstream>
@@ -13,25 +13,16 @@ extern "C"
 using std::ifstream;
 using std::stringstream;
 
-void *receive_datagram_pthread(void *listener_input_pointer);
-bool  start_listener_in_new_thread(int port, pthread_t *started, Datagram *expected);
-
-struct ListenerInput
-{
-  PORT port;
-  Datagram receive;
-};
-
 TEST(udp, send_and_receive)
 {
   static const int port = 8080;
 
   // this buffer MUST contain a c-string
-  char buffer[] = "this is some data";
+  const char buffer[] = "this is some data";
 
   log("reading in the file...");
   Datagram to_send;
-  memcpy(to_send.data, buffer, strlen(buffer));
+  memcpy(to_send.data, buffer, sizeof(buffer));
   to_send.length = sizeof(buffer);
   log("file contained |%s|!", buffer);
 
@@ -43,13 +34,13 @@ TEST(udp, send_and_receive)
   if (pthread_create(&listener_thread, NULL, receive_datagram_pthread,
                      &listener_input) != 0
      )
-    FAIL() << "Failed to send datagram!";
+    FAIL() << "Failed to start listening!";
 
-  log("listening!");
-
-  // sleep to ensure (but not really...) that we start listening before we send
-  // TODO: actually ensure this
+  log("sleep to ensure (but not really...) that we start listening before "
+      "we send");
+  // TODO: actually ensure that we start listening before sending somehow
   sleep(1);
+  log("*yawns* I'm awake!");
 
   log("Sending the datagram...");
   if (!send_datagram(to_send, "127.0.0.1", port))
@@ -62,13 +53,5 @@ TEST(udp, send_and_receive)
   log("Thread joined!");
 
   ASSERT_STREQ(to_send.data, listener_input.receive.data);
-}
-
-void *receive_datagram_pthread(void *in)
-{
-  ListenerInput *input = static_cast<ListenerInput *>(in);
-  log("passing in port %u", input->port);
-  input->receive = receive_datagram(input->port);
-  return NULL;
 }
 

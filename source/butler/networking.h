@@ -11,10 +11,11 @@
 
 /**
  * @brief We need a #define for this value because c doesn't always understand
- * that constants are constant when declaring arrays
+ * that constants are constant when declaring arrays; however, const variables
+ * are preferred to macros when they work
  */
 #define MAX_MESSAGE_LENGTH_MACRO 1023
-const size_t MAX_MESSAGE_LENGTH = MAX_MESSAGE_LENGTH_MACRO;
+static const size_t MAX_MESSAGE_LENGTH = MAX_MESSAGE_LENGTH_MACRO;
 
 typedef struct
 {

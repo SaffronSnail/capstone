@@ -64,6 +64,18 @@ struct EntranceResponse
 /*****************************************************************************/
 /*                       ENTRANCE REUQEST IMPLEMENTATION                     */
 /*****************************************************************************/
+const char *get_attendant_name(const EntranceRequest *this)
+{
+  return this->attendant_name;
+}
+
+EntranceRequest *receive_entrance_request(unsigned port)
+{
+  EntranceRequest *ret = (EntranceRequest *)malloc(sizeof(EntranceRequest));
+  *ret = *(EntranceRequest *)receive_datagram(port).data;
+  return ret;
+}
+
 void send_entrance_request(const char *attendant_name,
                            const char *host, unsigned remote_port,
                            unsigned local_port)
@@ -89,13 +101,6 @@ void send_entrance_request(const char *attendant_name,
   memcpy(dg.data, &to_send, sizeof(EntranceRequest));
   dg.length = sizeof(EntranceRequest);
   send_datagram(dg, host, remote_port);
-}
-
-EntranceRequest *receive_entrance_request(unsigned port)
-{
-  EntranceRequest *ret = (EntranceRequest *)malloc(sizeof(EntranceRequest));
-  *ret = *(EntranceRequest *)receive_datagram(port).data;
-  return ret;
 }
 
 /*****************************************************************************/
