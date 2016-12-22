@@ -64,9 +64,9 @@ struct EntranceResponse
 /*****************************************************************************/
 /*                       ENTRANCE REUQEST IMPLEMENTATION                     */
 /*****************************************************************************/
-EntranceResponse *send_entrance_request(const char *attendant_name,
-                                        const char *host, unsigned remote_port,
-                                        unsigned local_port)
+void send_entrance_request(const char *attendant_name,
+                           const char *host, unsigned remote_port,
+                           unsigned local_port)
 {
   Datagram dg;
   EntranceRequest to_send;
@@ -89,12 +89,6 @@ EntranceResponse *send_entrance_request(const char *attendant_name,
   memcpy(dg.data, &to_send, sizeof(EntranceRequest));
   dg.length = sizeof(EntranceRequest);
   send_datagram(dg, host, remote_port);
-  
-  EntranceResponse *response =
-    (EntranceResponse *)malloc(sizeof(EntranceResponse));
-  *response = *(EntranceResponse *)receive_datagram(remote_port).data;
-
-  return response;
 }
 
 EntranceRequest *receive_entrance_request(unsigned port)
@@ -107,6 +101,15 @@ EntranceRequest *receive_entrance_request(unsigned port)
 /*****************************************************************************/
 /*                       ENTRANCE REUQEST IMPLEMENTATION                     */
 /*****************************************************************************/
+EntranceResponse *receive_entrance_response(unsigned port)
+{
+  EntranceResponse *response =
+    (EntranceResponse *)malloc(sizeof(EntranceResponse));
+  *response = *(EntranceResponse *)receive_datagram(port).data;
+
+  return response;
+}
+
 void send_entrance_response(EntranceRequest *respondee, unsigned port)
 {
   Datagram dg;
