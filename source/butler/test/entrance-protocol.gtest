@@ -3,6 +3,7 @@
 extern "C"
 {
 #include "entrance-protocol.h"
+#include "entrance-request.h"
 #include "networking-pthread.h"
 }
 
@@ -10,25 +11,23 @@ extern "C"
 
 #define UNIMPLEMENTED FAIL() << "This test has not been implemented yet!"
 
-TEST(EntranceProtocol, SendRequest)
+TEST(EntranceProtocol, SendAndReceiveRequest)
 {
   const char attendant_name[] = "ATTENDANT_NAME";
   const unsigned send_port = 8080;
   const unsigned recv_port = 8081;
 
   log("starting to listen...");
-  ListenerInput listener_input;
-  listener_input.port = recv_port;
-
   pthread_t listener_thread;
-  if (pthread_create(&listener_thread, NULL, receive_datagram_pthread,
-                     &listener_input)
+  if (pthread_create(&listener_thread, NULL, 
+                     (void *(*)(void *))receive_entrance_request,
+                     (void *)recv_port)
      )
     FAIL() << "Failed to start listening!";
   log("Listening!");
 
-  log("sleep to ensure (but not really...) that we start listening before "
-      "we send");
+  log("sleep to ensure (but not really...) that we start listening before we "
+      "send");
   // TODO: actually ensure that we start listening before sending somehow
   sleep(1);
   log("*yawns* I'm awake!");
@@ -36,27 +35,56 @@ TEST(EntranceProtocol, SendRequest)
   log("sending the entrance request...");
   send_entrance_request(attendant_name, "127.0.0.1", recv_port, send_port);
   log("Entrance request sent!");
-  
+
   log("joining the listener thread...");
-  if (pthread_join(listener_thread, NULL) != 0)
-    FAIL() << "Failed to send datagram!";
+  EntranceRequest *request;
+  if (pthread_join(listener_thread, (void **)&request) != 0)
+    FAIL() << "Failed to join the listener thread!";
   log("Thread joined!");
-
-  ASSERT_STREQ(attendant_name,
-     get_attendant_name((EntranceRequest *)listener_input.receive.data));
+  
+  EXPECT_STREQ(attendant_name, get_attendant_name(request));
+  free_entrance_request(&request);
 }
 
-TEST(EntranceProtocol, ReceiveRequest)
+TEST(EntranceProtocol, SendAndReceiveResponse)
 {
-  UNIMPLEMENTED;
+  const unsigned send_port = 8080;
+  const unsigned recv_port = 8081;
+  const unsigned payload = 12345;
+
+  log("starting to listen...");
+  pthread_t listener_thread;
+  if (pthread_create(&listener_thread, NULL,
+                     (void *(*)(void *))receive_entrance_request,
+                     (void *)recv_port)
+     )
+    FAIL() << "Failed to start listening!";
+  log("Listening!");
+
+  log("sleep to ensure (but not really...) that we start listening before we "
+      "send");
+  // TODO: actually ensure that we start listening before sending somehow
+  sleep(1);
+  log("*yawns* I'm awake!");
+
+  log("sending the entrance response...");
+  EntranceRequest dummy;
+  strcpy(dummy.host, "127.0.0.1");
+  dummy.port = recv_port;
+  send_entrance_response(&dummy, payload);
+  log("Sent!");
+
+  log("joining the listener thread...");
+  EntranceResponse *received_response;
+  if (pthread_join(listener_thread, (void **)&received_response) != 0)
+    FAIL() << "Failed to join the listener thread!";
+  log ("Thread joined!");
+
+  ASSERT_EQ(payload, get_port(payload));
+  free_entrance_response(&received_response);
 }
 
-TEST(EntranceProtocol, SendResponse)
-{
-  UNIMPLEMENTED;
-}
-
-TEST(EntranceProtocol, ReceiveResponse)
+TEST(EntranceProtocol, SendRequestAndReceiveResponse)
 {
   UNIMPLEMENTED;
 }

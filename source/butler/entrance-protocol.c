@@ -9,10 +9,9 @@
 #include <unistd.h>
 
 // project includes
+#include "entrance-request.h"
+#include "entrance-response.h"
 #include "networking.h"
-
-
-#define ATTENDANT_NAME_LENGTH_MACRO 255
 
 /**
  * @brief The value given here is mostly arbitarary; I just want to put a limit
@@ -21,45 +20,10 @@
  */
 const int ATTENDANT_NAME_LENGTH = ATTENDANT_NAME_LENGTH_MACRO;
 
-#define HOSTNAME_LENGTH_MACRO 255
-/**
- * @brief This name is based on RFC 1035, which states that names should "255
- * octets or less". This value should only change if the standard changes, as
- * code may (at time of writing, some code does) rely on knowing that buffers
- * can hold valid hostnames of any length.
- */
-const int HOSTNAME_LENGTH = HOSTNAME_LENGTH_MACRO;
-
 /*****************************************************************************/
 /*                         HELPER FUNCTION DECLARATIONS                      */
 /*****************************************************************************/
 int min(int, int);
-
-struct EntranceRequest
-{
-  /**
-   * @brief The attendant that the client wants to talk to
-   */
-  char attendant_name[ATTENDANT_NAME_LENGTH_MACRO + 1];
-
-  /**
-   * @brief The hostname of the client
-   */
-  char host[HOSTNAME_LENGTH_MACRO + 1];
-
-  /**
-   * @brief The port of the client
-   */
-  unsigned port;
-};
-
-struct EntranceResponse
-{
-  /**
-   * @brief the port that the server is listening on
-   */
-  unsigned port;
-};
 
 /*****************************************************************************/
 /*                       ENTRANCE REUQEST IMPLEMENTATION                     */
@@ -67,6 +31,12 @@ struct EntranceResponse
 const char *get_attendant_name(const EntranceRequest *this)
 {
   return this->attendant_name;
+}
+
+void free_entrance_request(EntranceRequest **this)
+{
+  free(*this);
+  *this = NULL;
 }
 
 EntranceRequest *receive_entrance_request(unsigned port)
@@ -106,6 +76,11 @@ void send_entrance_request(const char *attendant_name,
 /*****************************************************************************/
 /*                       ENTRANCE REUQEST IMPLEMENTATION                     */
 /*****************************************************************************/
+unsigned get_port(const EntranceResponse *this)
+{
+  return this->port;
+}
+
 EntranceResponse *receive_entrance_response(unsigned port)
 {
   EntranceResponse *response =
@@ -124,6 +99,12 @@ void send_entrance_response(EntranceRequest *respondee, unsigned port)
   memcpy(dg.data, &to_send, sizeof(EntranceRequest));
   dg.length = sizeof(EntranceRequest);
   send_datagram(dg, respondee->host, respondee->port);
+}
+
+void free_entrance_response(EntranceResponse **this)
+{
+  free(*this);
+  *this = NULL;
 }
 
 /*****************************************************************************/

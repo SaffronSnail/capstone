@@ -81,6 +81,8 @@ void send_entrance_response(EntranceRequest *respondee, unsigned port);
 
 EntranceResponse *recieve_entrance_response(unsigned port);
 
+unsigned get_port(const EntranceResponse *);
+
 /**
  * @brief frees the memory associated with the entrance responseand sets the
  * pointer to NULL

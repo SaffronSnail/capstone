@@ -42,8 +42,30 @@ function test()
     generate;
   fi
 
+  OWD=$PWD
+  cd $BUILD_DIR
+  make
+  cd $OWD
+
   TEST_COMMAND=$BUILD_DIR/source/butler/test/butler-test-suite
   make
   $TEST_COMMAND
+}
+
+function debug()
+{
+  BUILD_DIR=$CAPSTONE_DIR/build
+  if [ ! -d $BUILD_DIR ]; then
+    generate;
+  fi
+
+  TEST_COMMAND=$BUILD_DIR/source/butler/test/butler-test-suite
+
+  OWD=$PWD
+  cd $BUILD_DIR
+  make
+  cd $OWD
+
+  gdb $TEST_COMMAND
 }
 
