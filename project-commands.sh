@@ -4,6 +4,8 @@ fi
 
 function generate()
 {
+  echo "generating the build directory..."
+
   if [ -z $GTEST_DIR ]; then
     GTEST_DIR = $1;
   fi
@@ -23,6 +25,8 @@ function generate()
 
 function build()
 {
+  echo "building..."
+
   OWD=$PWD
   BUILD_DIR=$CAPSTONE_DIR/build
   if [ ! -d $BUILD_DIR ]; then
@@ -31,41 +35,33 @@ function build()
 
   cd $BUILD_DIR
   echo "Making..."
-  make;
+  make
+  EXIT_STATUS=$?
   cd $OWD
+  return $EXIT_STATUS
 }
 
 function test()
 {
-  BUILD_DIR=$CAPSTONE_DIR/build
-  if [ ! -d $BUILD_DIR ]; then
-    generate;
+  build
+
+  if [ $? -eq 0 ]; then
+    echo "testing..."
+    $CAPSTONE_DIR/build/source/butler/test/butler-test-suite
+  else
+    echo "Build failed! Aborting test!"
   fi
-
-  OWD=$PWD
-  cd $BUILD_DIR
-  make
-  cd $OWD
-
-  TEST_COMMAND=$BUILD_DIR/source/butler/test/butler-test-suite
-  make
-  $TEST_COMMAND
 }
 
 function debug()
 {
-  BUILD_DIR=$CAPSTONE_DIR/build
-  if [ ! -d $BUILD_DIR ]; then
-    generate;
+  build
+
+  if [ $? -eq 0 ]; then
+    echo "debugging..."
+    gdb $CAPSTONE_DIR/build/source/butler/test/butler-test-suite
+  else
+    echo "Build failed! Aborting debug session!"
   fi
-
-  TEST_COMMAND=$BUILD_DIR/source/butler/test/butler-test-suite
-
-  OWD=$PWD
-  cd $BUILD_DIR
-  make
-  cd $OWD
-
-  gdb $TEST_COMMAND
 }
 
