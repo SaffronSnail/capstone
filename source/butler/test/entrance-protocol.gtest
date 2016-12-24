@@ -14,8 +14,8 @@ extern "C"
 TEST(EntranceProtocol, SendAndReceiveRequest)
 {
   const char attendant_name[] = "ATTENDANT_NAME";
-  const unsigned send_port = 8080;
-  const unsigned recv_port = 8081;
+  const unsigned recv_port = 8080;
+  const unsigned payload = 12345;
 
   log("starting to listen...");
   pthread_t listener_thread;
@@ -33,7 +33,7 @@ TEST(EntranceProtocol, SendAndReceiveRequest)
   log("*yawns* I'm awake!");
 
   log("sending the entrance request...");
-  send_entrance_request(attendant_name, "127.0.0.1", recv_port, send_port);
+  send_entrance_request(attendant_name, "127.0.0.1", recv_port, payload);
   log("Entrance request sent!");
 
   log("joining the listener thread...");
@@ -48,8 +48,7 @@ TEST(EntranceProtocol, SendAndReceiveRequest)
 
 TEST(EntranceProtocol, SendAndReceiveResponse)
 {
-  const unsigned send_port = 8080;
-  const unsigned recv_port = 8081;
+  const unsigned recv_port = 8080;
   const unsigned payload = 12345;
 
   log("starting to listen...");
@@ -80,12 +79,7 @@ TEST(EntranceProtocol, SendAndReceiveResponse)
     FAIL() << "Failed to join the listener thread!";
   log ("Thread joined!");
 
-  ASSERT_EQ(payload, get_port(payload));
+  ASSERT_EQ(payload, get_port(received_response));
   free_entrance_response(&received_response);
-}
-
-TEST(EntranceProtocol, SendRequestAndReceiveResponse)
-{
-  UNIMPLEMENTED;
 }
 
