@@ -29,10 +29,10 @@ TEST(EntranceProtocol, SendAndReceiveRequest)
       "send");
   // TODO: actually ensure that we start listening before sending somehow
   sleep(1);
-  log("*yawns* I'm awake!");
+  log("I'm awake!");
 
   log("sending the entrance request...");
-  send_entrance_request(attendant_name, "127.0.0.1", recv_port, payload);
+  send_entrance_request("127.0.0.1", recv_port, attendant_name, payload);
   log("Entrance request sent!");
 
   log("joining the listener thread...");

@@ -1,7 +1,6 @@
 #include "entrance-protocol.h"
 
 #include <boost/asio.hpp>
-#include <boost/array.hpp>
 #include <cstring>
 
 // project includes
@@ -37,7 +36,7 @@ const char *get_attendant_name(const EntranceRequest *er)
 
 void free_entrance_request(EntranceRequest **er)
 {
-  delete er;
+  delete *er;
   *er = NULL;
 }
 
@@ -91,16 +90,44 @@ unsigned get_port(const EntranceResponse *er)
 
 EntranceResponse *receive_entrance_response(unsigned port)
 {
-  return NULL;
+  using boost::asio::buffer;
+  using boost::asio::ip::udp;
+  using boost::system::error_code;
+
+  EntranceResponse *ret = new EntranceResponse();
+
+  udp::socket socket(service, udp::endpoint(udp::v4(), port));
+  udp::endpoint remote_endpoint;
+  error_code error;
+
+  socket.receive_from(buffer(ret, sizeof(EntranceResponse)), remote_endpoint, 0,
+                      error);
+
+  if (error)
+    free_entrance_response(&ret);
+
+  return ret;
 }
 
 void send_entrance_response(EntranceRequest *respondee, unsigned attendant_port)
 {
+  using boost::asio::buffer;
+  using boost::asio::ip::udp;
+
+  EntranceResponse to_send;
+  to_send.port = attendant_port;
+
+  udp::endpoint local_endpoint(udp::v4(), 0);
+  udp::endpoint remote_endpoint = make_endpoint(respondee->host,
+                                                respondee->port);
+
+  udp::socket socket(service, local_endpoint);
+  socket.send_to(buffer(&to_send, sizeof(to_send)), remote_endpoint);
 }
 
 void free_entrance_response(EntranceResponse **er)
 {
-  free(*er);
+  delete *er;
   *er = NULL;
 }
 
