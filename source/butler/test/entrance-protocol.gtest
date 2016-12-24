@@ -4,7 +4,6 @@ extern "C"
 {
 #include "entrance-protocol.h"
 #include "entrance-request.h"
-#include "networking-pthread.h"
 }
 
 #include "log.h"
