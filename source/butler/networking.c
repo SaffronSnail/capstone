@@ -73,7 +73,7 @@ SOCKET create_datagram_socket(const char *host, PORT port, bool listener,
  * @return the datagram that was recieved. If there is an error will return a
  * datagram with data set to NULL and a length of 0.
  */
-Datagram receive_datagram(PORT port)
+void receive_datagram(PORT port,)
 {
   // return variable with reasonable defaults
   Datagram ret;
@@ -117,7 +117,6 @@ Datagram receive_datagram(PORT port)
 
   return ret;
 }
-
 
 /**
  * @brief Sends the given data to the given host on the given port. Creates
