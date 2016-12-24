@@ -6,6 +6,10 @@
  * tells the user what port the attendant is listening on
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief The EntranceRequest is sent by the client to the server to indicate
  * (1) that it wants a connection and (2) which kind of attendant it wants to
@@ -27,7 +31,7 @@ typedef struct EntranceResponse EntranceResponse;
  */
 extern const int ATTENDANT_NAME_LENGTH;
 
-/** \defingroup EntranceRequest
+/** \definegroup EntranceRequest
  * @{
  */
 
@@ -41,8 +45,8 @@ extern const int ATTENDANT_NAME_LENGTH;
  * @param local_port the port that the server should send the EntranceResponse
  * to
  */
-void send_entrance_request(const char *attendant_name, const char *host,
-                           unsigned remote_port, unsigned local_port);
+void send_entrance_request(const char *server_name, unsigned server_port,
+                           const char *attendant_name, unsigned local_port);
 
 /**
  * @brief Blocks until a message is received on the given port; it is assumed
@@ -93,3 +97,6 @@ void free_entrance_response(EntranceResponse **target);
 
 /**@}*/ //EntranceResponse group
 
+#ifdef __cplusplus
+} //extern "C"
+#endif

@@ -2,6 +2,10 @@
 
 #include "entrance-protocol.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ATTENDANT_NAME_LENGTH_MACRO 255
 
 #define HOSTNAME_LENGTH_MACRO 255
@@ -30,4 +34,8 @@ struct EntranceRequest
    */
   unsigned port;
 };
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct EntranceResponse
 {
   /**
@@ -7,4 +11,8 @@ struct EntranceResponse
    */
   unsigned port;
 };
+
+#ifdef __cplusplus
+}
+#endif
 
