@@ -1,11 +1,13 @@
 #pragma once
 
 #include "entrance-protocol.h"
-#include "entrance-request.h"
 
+#include "entrance-request.h"
 #include "log.h"
 
 #define UNIMPLEMENTED FAIL() << "This test has not been implemented yet!"
+
+typedef void *(*start_routine_t)(void *);
 
 TEST(EntranceProtocol, SendAndReceiveRequest)
 {
@@ -15,9 +17,9 @@ TEST(EntranceProtocol, SendAndReceiveRequest)
 
   log("starting to listen...");
   pthread_t listener_thread;
-  if (pthread_create(&listener_thread, NULL, 
-                     (void *(*)(void *))receive_entrance_request,
-                     (void *)recv_port)
+  if (pthread_create(&listener_thread, NULL,
+                     reinterpret_cast<start_routine_t>(receive_entrance_request),
+                     reinterpret_cast<void *>(static_cast<intptr_t>(recv_port)))
      )
     FAIL() << "Failed to start listening!";
   log("Listening!");
@@ -50,8 +52,8 @@ TEST(EntranceProtocol, SendAndReceiveResponse)
   log("starting to listen...");
   pthread_t listener_thread;
   if (pthread_create(&listener_thread, NULL,
-                     (void *(*)(void *))receive_entrance_request,
-                     (void *)recv_port)
+                     reinterpret_cast<start_routine_t>(receive_entrance_request),
+                     reinterpret_cast<void *>(static_cast<intptr_t>(recv_port)))
      )
     FAIL() << "Failed to start listening!";
   log("Listening!");
