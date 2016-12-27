@@ -1,0 +1,13 @@
+#pragma once
+
+extern "C"
+{
+  int test(int);
+}
+
+TEST(CLinkage, EntranceProtocol)
+{
+  int val = 42;
+  ASSERT_EQ(val, test(val));
+}
+
