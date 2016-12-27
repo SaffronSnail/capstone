@@ -44,9 +44,11 @@ extern const int ATTENDANT_NAME_LENGTH;
  * @param remote_port the port the server is listening on
  * @param local_port the port that the server should send the EntranceResponse
  * to
+ *
+ * @return 0 if there was no error, otherwise a negative number
  */
-void send_entrance_request(const char *server_name, unsigned server_port,
-                           const char *attendant_name, unsigned local_port);
+int send_entrance_request(const char *server_name, unsigned server_port,
+                          const char *attendant_name, unsigned local_port);
 
 /**
  * @brief Blocks until a message is received on the given port; it is assumed

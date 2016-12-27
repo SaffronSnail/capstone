@@ -61,23 +61,31 @@ EntranceRequest *receive_entrance_request(unsigned port)
   return ret;
 }
 
-void send_entrance_request(const char *server_name, unsigned server_port,
+int send_entrance_request(const char *server_name, unsigned server_port,
                            const char *attendant_name, unsigned local_port)
 {
-  using boost::asio::buffer;
-  using boost::asio::ip::udp;
+  try
+  {
+    using boost::asio::buffer;
+    using boost::asio::ip::udp;
 
-  EntranceRequest to_send;
-  memset(to_send.attendant_name, 0, sizeof(to_send.attendant_name));
-  strncpy(to_send.attendant_name, attendant_name, ATTENDANT_NAME_LENGTH);
-  memset(to_send.host, 0, sizeof(to_send.host));
-  to_send.port = local_port;
+    EntranceRequest to_send;
+    memset(to_send.attendant_name, 0, sizeof(to_send.attendant_name));
+    strncpy(to_send.attendant_name, attendant_name, ATTENDANT_NAME_LENGTH);
+    memset(to_send.host, 0, sizeof(to_send.host));
+    to_send.port = local_port;
 
-  udp::endpoint local_endpoint(udp::v4(), local_port);
-  udp::endpoint remote_endpoint = make_endpoint(server_name, server_port);
+    udp::endpoint local_endpoint(udp::v4(), local_port);
+    udp::endpoint remote_endpoint = make_endpoint(server_name, server_port);
 
-  udp::socket socket(service, local_endpoint);
-  socket.send_to(buffer(&to_send, sizeof(to_send)), remote_endpoint);
+    udp::socket socket(service, local_endpoint);
+    socket.send_to(buffer(&to_send, sizeof(to_send)), remote_endpoint);
+    return true;
+  }
+  catch (std::exception &e)
+  {
+    return false;
+  }
 }
 
 /*****************************************************************************/

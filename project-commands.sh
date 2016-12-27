@@ -6,6 +6,7 @@ function generate()
 {
   echo "generating the build directory..."
 
+  OWD=$PWD
   if [ -z $GTEST_DIR ]; then
     GTEST_DIR = $1;
   fi
@@ -21,6 +22,7 @@ function generate()
       echo "Generating..."                       &&
       cmake -DGTEST_DIR=$GTEST_DIR $CAPSTONE_DIR
   fi
+  cd $OWD
 }
 
 function build()
@@ -47,7 +49,7 @@ function test()
 
   if [ $? -eq 0 ]; then
     echo "testing..."
-    $CAPSTONE_DIR/build/source/butler/test/butler-test-suite
+    $CAPSTONE_DIR/build/bin/butler/butler-test-suite
   else
     echo "Build failed! Aborting test!"
   fi
@@ -59,7 +61,7 @@ function debug()
 
   if [ $? -eq 0 ]; then
     echo "debugging..."
-    gdb $CAPSTONE_DIR/build/source/butler/test/butler-test-suite
+    gdb $CAPSTONE_DIR/build/bin/butler/butler-test-suite
   else
     echo "Build failed! Aborting debug session!"
   fi

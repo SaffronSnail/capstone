@@ -1,10 +1,7 @@
 #pragma once
 
-extern "C"
-{
 #include "entrance-protocol.h"
 #include "entrance-request.h"
-}
 
 #include "log.h"
 

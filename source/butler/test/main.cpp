@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 // Include Order Determines Run Order!!!
+#include "c-linkage.gtest"
 #include "utils.gtest"
 #include "entrance-protocol.gtest"
 
