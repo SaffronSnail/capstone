@@ -64,12 +64,11 @@ EntranceRequest *receive_entrance_request(unsigned port);
 const char *get_attendant_name(const EntranceRequest *);
 
 /**
- * @brief frees the memory associated with the entrance request and sets the
- * pointer to NULL
+ * @brief frees the memory associated with the entrance request
  *
- * @param the memory that should be freed/pointer that should be set to NULL
+ * @param the memory that should be freed
  */
-void free_entrance_request(EntranceRequest **target);
+void free_entrance_request(EntranceRequest *target);
 
 /**@}*/ //EntranceRequest group
 
@@ -85,20 +84,20 @@ void free_entrance_request(EntranceRequest **target);
  */
 void send_entrance_response(EntranceRequest *respondee, unsigned port);
 
-EntranceResponse *recieve_entrance_response(unsigned port);
+EntranceResponse *receive_entrance_response(unsigned port);
 
 unsigned get_port(const EntranceResponse *);
 
 /**
- * @brief frees the memory associated with the entrance responseand sets the
- * pointer to NULL
+ * @brief frees the memory associated with the entrance response
  *
- * @param the memory that should be freed/pointer that should be set to NULL
+ * @param the memory that should be freed
  */
-void free_entrance_response(EntranceResponse **target);
+void free_entrance_response(EntranceResponse *target);
 
 /**@}*/ //EntranceResponse group
 
 #ifdef __cplusplus
 } //extern "C"
 #endif
+

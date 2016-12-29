@@ -1,6 +1,6 @@
 #include "entrance-protocol.h"
 
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #include <cstring>
 
 // project includes
@@ -17,13 +17,13 @@ extern "C" {
  */
 const int ATTENDANT_NAME_LENGTH = ATTENDANT_NAME_LENGTH_MACRO;
 
-using boost::asio::io_service;
+using asio::io_service;
 static io_service service;
 
 /*****************************************************************************/
 /*                         HELPER FUNCTION DECLARATIONS                      */
 /*****************************************************************************/
-boost::asio::ip::udp::endpoint make_endpoint(const char *host, unsigned port);
+asio::ip::udp::endpoint make_endpoint(const char *host, unsigned port);
 int min(int, int);
 
 /*****************************************************************************/
@@ -34,17 +34,16 @@ const char *get_attendant_name(const EntranceRequest *er)
   return er->attendant_name;
 }
 
-void free_entrance_request(EntranceRequest **er)
+void free_entrance_request(EntranceRequest *er)
 {
-  delete *er;
-  *er = NULL;
+  delete er;
 }
 
 EntranceRequest *receive_entrance_request(unsigned port)
 {
-  using boost::asio::buffer;
-  using boost::asio::ip::udp;
-  using boost::system::error_code;
+  using asio::buffer;
+  using asio::ip::udp;
+  using asio::error_code;
 
   EntranceRequest *ret = new EntranceRequest();
 
@@ -56,7 +55,10 @@ EntranceRequest *receive_entrance_request(unsigned port)
                       error);
 
   if (error)
-    free_entrance_request(&ret);
+  {
+    free_entrance_request(ret);
+    ret = nullptr;
+  }
 
   return ret;
 }
@@ -66,8 +68,8 @@ int send_entrance_request(const char *server_name, unsigned server_port,
 {
   try
   {
-    using boost::asio::buffer;
-    using boost::asio::ip::udp;
+    using asio::buffer;
+    using asio::ip::udp;
 
     EntranceRequest to_send;
     memset(to_send.attendant_name, 0, sizeof(to_send.attendant_name));
@@ -98,9 +100,9 @@ unsigned get_port(const EntranceResponse *er)
 
 EntranceResponse *receive_entrance_response(unsigned port)
 {
-  using boost::asio::buffer;
-  using boost::asio::ip::udp;
-  using boost::system::error_code;
+  using asio::buffer;
+  using asio::ip::udp;
+  using asio::error_code;
 
   EntranceResponse *ret = new EntranceResponse();
 
@@ -112,15 +114,18 @@ EntranceResponse *receive_entrance_response(unsigned port)
                       error);
 
   if (error)
-    free_entrance_response(&ret);
+  {
+    free_entrance_response(ret);
+    ret = nullptr;
+  }
 
   return ret;
 }
 
 void send_entrance_response(EntranceRequest *respondee, unsigned attendant_port)
 {
-  using boost::asio::buffer;
-  using boost::asio::ip::udp;
+  using asio::buffer;
+  using asio::ip::udp;
 
   EntranceResponse to_send;
   to_send.port = attendant_port;
@@ -133,18 +138,17 @@ void send_entrance_response(EntranceRequest *respondee, unsigned attendant_port)
   socket.send_to(buffer(&to_send, sizeof(to_send)), remote_endpoint);
 }
 
-void free_entrance_response(EntranceResponse **er)
+void free_entrance_response(EntranceResponse *er)
 {
-  delete *er;
-  *er = NULL;
+  delete er;
 }
 
 /*****************************************************************************/
 /*                         HELPER FUNCTION DEFINITIONS                       */
 /*****************************************************************************/
-boost::asio::ip::udp::endpoint make_endpoint(const char *host, unsigned port)
+asio::ip::udp::endpoint make_endpoint(const char *host, unsigned port)
 {
-  using boost::asio::ip::udp;
+  using asio::ip::udp;
 
   static char port_string[10];
   memset(port_string, 0, sizeof(port_string));

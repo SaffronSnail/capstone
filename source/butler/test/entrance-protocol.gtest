@@ -41,7 +41,7 @@ TEST(EntranceProtocol, SendAndReceiveRequest)
   log("Thread joined!");
   
   EXPECT_STREQ(attendant_name, get_attendant_name(request));
-  free_entrance_request(&request);
+  free_entrance_request(request);
 }
 
 TEST(EntranceProtocol, SendAndReceiveResponse)
@@ -78,6 +78,6 @@ TEST(EntranceProtocol, SendAndReceiveResponse)
   log ("Thread joined!");
 
   ASSERT_EQ(payload, get_port(received_response));
-  free_entrance_response(&received_response);
+  free_entrance_response(received_response);
 }
 
