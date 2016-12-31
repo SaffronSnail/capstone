@@ -2,31 +2,30 @@
 -e run-butler -s
 !#
 
-(define-module (saffronsnail capstone butler)
-               #:export (run-butler)
+(load "glue.guile")
+
+(define-module (saffronsnail butler)
+               #:export (run-butler-listener)
+               #:use-module (saffronsnail butler glue)
 )
 
 ; this is the 'main' of this file; it waits for someone to connect, reads the
 ; attendant request, and migrates the connection to a different port so that
 ; it can continue listening; there is currently no 'clean' way to close this,
 ; just ctrl-c at the terminal
-(define* (run-butler #:key (port 8080))
-  (entrance-protocol (wait-for-connection port))
-  (run-butler #:port port)
+(define* (run-butler-listener #:key (port 8080))
+  (entrance-protocol (receive-entrance-request port))
+  (run-butler-listener #:port port)
 )
 
 ; the entrance protocol defines what happens when a user first makes contact
 ; with butler; it involves determining what attendant should serve this
 ; connection and what port the user will be speaking to for the rest of the
 ; connection
-(define (entrance-protocol connection)
-  (let ((new-port (next-port)))
-    (let ((attendant-request (parse-entrance-protocol
-                               (wait-for-data connection 528))))
-      (tend-to-port attendant-request new-port)
-      (send-data    connection        new-port)
-    )
-  )
+(define (entrance-protocol entrance-request)
+  (display "Got a connection! Attendant requested: ")
+  (display (attendant-name entrance-request))
+  (newline)
 )
 
 ; finds a useable port for new connections; might be written in c instead of
