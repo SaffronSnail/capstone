@@ -1,12 +1,8 @@
-#! /bin/guile \
--e run-butler -s
-!#
-
-(load "glue.guile")
-
 (define-module (saffronsnail butler)
                #:export (run-butler-listener)
+               #:use-module (saffronsnail attendant)
                #:use-module (saffronsnail butler glue)
+               #:use-module (saffronsnail butler log)
 )
 
 ; this is the 'main' of this file; it waits for someone to connect, reads the
@@ -23,20 +19,11 @@
 ; connection and what port the user will be speaking to for the rest of the
 ; connection
 (define (entrance-protocol entrance-request)
-  (display "Got a connection! Attendant requested: ")
-  (display (attendant-name entrance-request))
-  (newline)
-)
+  (log "Got a connection! Attendant requested: " (attendant-name entrance-request))
 
-; finds a useable port for new connections; might be written in c instead of
-; guile
-(define (next-port)
-  (error "TODO: implement next-port")
-)
-
-; tells an attendant that it should tend to (send/recieve data on) a particular
-; port
-(define (tend-to-port attendant-request new-port)
-  (error "TODO: implement initialize-attendant")
+  (let ((attendant (make-attendant (attendant-name entrance-request))))
+    (call-with-new-thread (attendant 'start))
+    (send-entrance-response entrance-request (attendant 'port))
+  )
 )
 

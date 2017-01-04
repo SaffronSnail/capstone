@@ -43,7 +43,7 @@ extern const int ATTENDANT_NAME_LENGTH;
  * @param host the name (IP address, URL, etc.) of the server
  * @param remote_port the port the server is listening on
  * @param local_port the port that the server should send the EntranceResponse
- * to
+ *        to
  *
  * @return 0 if there was no error, otherwise a negative number
  */

@@ -7,5 +7,6 @@ set(CMAKE_CXX_FLAGS "-Wall -Werror -Wextra -std=gnu++14 -pthread")
 add_definitions(-DASIO_STANDALONE)
 include_directories("asio/asio/include/")
 
+add_subdirectory(source/attendant)
 add_subdirectory(source/butler)
 

@@ -39,7 +39,7 @@
 
 (define send-entrance-response
   (pointer->procedure void (dynamic-func "send_entrance_response" impl)
-                      (list unsigned-int)
+                      (list '* unsigned-int)
   )
 )
 
