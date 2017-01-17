@@ -13,7 +13,7 @@ TEST(EntranceProtocol, SendAndReceiveRequest)
 {
   const char attendant_name[] = "ATTENDANT_NAME";
   const unsigned recv_port = 8080;
-  const unsigned payload = 12345;
+  const unsigned payload = 1355;
 
   log("starting to listen...");
   pthread_t listener_thread;
@@ -26,12 +26,11 @@ TEST(EntranceProtocol, SendAndReceiveRequest)
 
   log("sleep to ensure (but not really...) that we start listening before we "
       "send");
-  // TODO: actually ensure that we start listening before sending somehow
   sleep(1);
   log("I'm awake!");
 
   log("sending the entrance request...");
-  send_entrance_request("127.0.0.1", recv_port, attendant_name, payload);
+  send_entrance_request(0, "127.0.0.1", recv_port, attendant_name, payload);
   log("Entrance request sent!");
 
   log("joining the listener thread...");
@@ -60,7 +59,6 @@ TEST(EntranceProtocol, SendAndReceiveResponse)
 
   log("sleep to ensure (but not really...) that we start listening before we "
       "send");
-  // TODO: actually ensure that we start listening before sending somehow
   sleep(1);
   log("*yawns* I'm awake!");
 
@@ -68,7 +66,7 @@ TEST(EntranceProtocol, SendAndReceiveResponse)
   EntranceRequest dummy;
   strcpy(dummy.host, "127.0.0.1");
   dummy.port = recv_port;
-  send_entrance_response(&dummy, payload);
+  send_entrance_response(0, &dummy, payload);
   log("Sent!");
 
   log("joining the listener thread...");

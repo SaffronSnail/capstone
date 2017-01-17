@@ -17,6 +17,11 @@ extern "C" {
  */
 const int HOSTNAME_LENGTH = HOSTNAME_LENGTH_MACRO;
 
+/**
+ * @brief This is the first message sent which indicates to a server running a
+ * butler listener that the client is interested in forming a connection with an
+ * attendant.
+ */
 struct EntranceRequest
 {
   /**

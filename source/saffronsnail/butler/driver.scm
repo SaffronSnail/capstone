@@ -3,7 +3,10 @@
 !#
 
 (add-to-load-path (dirname (current-filename)))
+(display %load-path) (newline)
+
 (use-modules (saffronsnail butler)
+             (saffronsnail log)
              (ice-9 getopt-long)
 )
 
@@ -12,6 +15,7 @@
     '((port (single-char #\p) (value #t)))
   )
   (define options (getopt-long (command-line) option-spec))
+  (logmsg "staring the main program...")
   (let ((port (option-ref options 'port #f)))
     (if port
       (run-butler-listener port)

@@ -1,20 +1,26 @@
 (define-module (saffronsnail attendant)
                #:export (make-attendant)
+               #:use-module (saffronsnail butler glue)
+               #:use-module (saffronsnail log)
+
                #:use-module (system foreign)
 )
 
+; this is a metafunction which defines functions that load a specific function
+; from a given library
 (define (create-load-func ret func-name args)
   (lambda (lib)
     (pointer->procedure ret (dynamic-func func-name lib) args)
   )
 )
 
+; the following functions are helper functions for loading the callbacks from an
+; attendant module
 (define load-init (create-load-func '* "init" '(* *)))
 (define load-start (create-load-func void "start" '()))
 (define load-validate (create-load-func int "validate_data"
                                         '(* *)
-                      )
-)
+                      ))
 (define load-transform-incoming (create-load-func '* "transform_incoming_data"
                                                   '(* *)
                                 )
@@ -25,9 +31,11 @@
 )
 (define load-stop (create-load-func void "stop" '(*)))
 
-(define (make-attendant attendant-name entrance-request)
-  ; TODO: load the library
-  (let* ((lib (dynamic-link (string "/lib/attendants/" attendant-name)))
+; loads and intializes an attendant, but does NOT signal the attendant to begin
+; communicating with the client
+(define (make-attendant entrance-request)
+  (let* ((lib (dynamic-link (string-append "lib"
+                                           (attendant-name entrance-request))))
 
          (validate           (load-validate           lib))
          (transform-incoming (load-transform-incoming lib))
@@ -36,24 +44,38 @@
          (send-data (lambda (data) (display "fake sending data") (newline)))
          (wait-for-data (lambda () (display "fake waiting for data") (newline)))
 
-         (attendant ((load-init lib) send-data wait-for-data)) 
+         (attendant ((load-init lib) (procedure->pointer void send-data '(*))
+                                     (procedure->pointer '* wait-for-data '())
+                    )
+         )
 
-         (start              (load-start              lib))
-         (stop               (load-stop               lib))
+         (start (load-start lib))
+         (stop  (load-stop  lib))
         )
 
     ; this function dispatcher is an 'instance' of the attendant
     (lambda (func . args)
-      (case func
-        (('start) (start attendant (first args)))
-        (('stop) (stop attendant))
-        (('port) (warn "need to determine port number in make-attendant") 8081)
+      (cond
+        ((eq? 'start func) (logmsg "fake called start"))
+                           ;(start attendant (first args))))
+        ((eq? 'stop  func) (logmsg "fake called stop" ))
+                           ;(stop attendant)))
+        ((eq? 'port  func) (warn (string-append "need to determine port number"
+                                                "in make-attendant"))
+                                 0
+        )
 
         ; I'm not sure we ever want to call these from scheme, but we might and
         ; we need to make sure that these functions don't get garbage-collected
-        ; anyway, since we pass them to c code
-        (('send-data) (send-data (first args)))
-        (('wait-for-data) (wait-for-data))
+        ; anyway, since we pass them as callbacks to c code
+        ((eq? 'send-data func) (logmsg "fake called send-data"))
+                                       ;(send-data (first args))))
+        ((eq? 'wait-for-data func) (logmsg "fake called wait-for-data"))
+                                           ;(wait-for-data)))
+        (else (error (string-append "did not recognize request for function "
+                                    (symbol->string func))
+              )
+        )
       )
     )
   )

@@ -1,6 +1,6 @@
-(define-module (saffronsnail butler log))
+(define-module (saffronsnail log))
 
-(define-public (log message)
-  (display message) (newline)
+(define-public (logmsg message)
+  (display (current-thread)) (display ": ") (display message) (newline)
 )
 

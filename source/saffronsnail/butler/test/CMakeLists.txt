@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.6)
 add_library(test-c-linkage STATIC c-linkage.c)
 
 #find_package(GTest REQUIRED)
-include_directories("${PROJECT_SOURCE_DIR}/source/butler" ${GTEST_DIR}
+include_directories("${PROJECT_SOURCE_DIR}/source/saffronsnail/butler" ${GTEST_DIR}
                      ${GTEST_DIR}/include
                    )
 

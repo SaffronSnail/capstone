@@ -39,6 +39,7 @@ extern const int ATTENDANT_NAME_LENGTH;
  * @brief creates an EntranceRequest and send it to the specified host and
  * port. Blocks until a response is received.
  *
+ * @param send_port The port that should be used to send the request
  * @param attendant_name The name of the attendent you are requesting
  * @param host the name (IP address, URL, etc.) of the server
  * @param remote_port the port the server is listening on
@@ -47,7 +48,8 @@ extern const int ATTENDANT_NAME_LENGTH;
  *
  * @return 0 if there was no error, otherwise a negative number
  */
-int send_entrance_request(const char *server_name, unsigned server_port,
+int send_entrance_request(unsigned send_port,
+                          const char *server_name, unsigned server_port,
                           const char *attendant_name, unsigned local_port);
 
 /**
@@ -79,13 +81,29 @@ void free_entrance_request(EntranceRequest *target);
 /**
  * @brief Notifies the send of the port that is listening
  *
+ * @param send_port The port that should be used to send the request
  * @param respondee The request that is being responded to
- * @param port the port that is being listened on
+ * @param attendant_port the port that is being listened on
  */
-void send_entrance_response(EntranceRequest *respondee, unsigned port);
+void send_entrance_response(unsigned send_port, EntranceRequest *respondee,
+                            unsigned attendant_port);
 
+/**
+ * @brief blocks until a response is recieved on the given port
+ *
+ * @param port the port to listen on
+ *
+ * @return the next entrance response that the port receives
+ */
 EntranceResponse *receive_entrance_response(unsigned port);
 
+/**
+ * @brief returns the port number that all future messages should be sent to
+ *
+ * @param the object to interrogate
+ *
+ * @return the port to send messages to
+ */
 unsigned get_port(const EntranceResponse *);
 
 /**

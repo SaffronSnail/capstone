@@ -4,6 +4,11 @@
 extern "C" {
 #endif
 
+  /**
+   * @brief This message is how the server communicates information
+   * necesarry for the client to connect to the attendant, once it
+   * has been loaded.
+   */
 struct EntranceResponse
 {
   /**

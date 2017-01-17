@@ -2,6 +2,9 @@
 
 #include <asio.hpp>
 #include <cstring>
+#include <stdexcept>
+
+#include <iostream>
 
 // project includes
 extern "C" {
@@ -63,31 +66,26 @@ EntranceRequest *receive_entrance_request(unsigned port)
   return ret;
 }
 
-int send_entrance_request(const char *server_name, unsigned server_port,
-                           const char *attendant_name, unsigned local_port)
+int send_entrance_request(unsigned send_port,
+                          const char *server_name, unsigned server_port,
+                          const char *attendant_name, unsigned attendant_port)
 {
-  try
-  {
-    using asio::buffer;
-    using asio::ip::udp;
+  using asio::buffer;
+  using asio::ip::udp;
 
-    EntranceRequest to_send;
-    memset(to_send.attendant_name, 0, sizeof(to_send.attendant_name));
-    strncpy(to_send.attendant_name, attendant_name, ATTENDANT_NAME_LENGTH);
-    memset(to_send.host, 0, sizeof(to_send.host));
-    to_send.port = local_port;
+  EntranceRequest to_send;
+  memset(to_send.attendant_name, 0, sizeof(to_send.attendant_name));
+  strncpy(to_send.attendant_name, attendant_name, ATTENDANT_NAME_LENGTH);
+  memset(to_send.host, 0, sizeof(to_send.host));
+  to_send.port = attendant_port;
 
-    udp::endpoint local_endpoint(udp::v4(), local_port);
-    udp::endpoint remote_endpoint = make_endpoint(server_name, server_port);
+  udp::endpoint attendant_endpoint = make_endpoint("127.0.0.1", send_port);
+  udp::endpoint remote_endpoint = make_endpoint(server_name, server_port); 
 
-    udp::socket socket(service, local_endpoint);
-    socket.send_to(buffer(&to_send, sizeof(to_send)), remote_endpoint);
-    return true;
-  }
-  catch (std::exception &e)
-  {
-    return false;
-  }
+  udp::socket socket(service, attendant_endpoint);
+  socket.send_to(buffer(&to_send, sizeof(to_send)), remote_endpoint);
+  socket.close();
+  return true;
 }
 
 /*****************************************************************************/
@@ -122,7 +120,8 @@ EntranceResponse *receive_entrance_response(unsigned port)
   return ret;
 }
 
-void send_entrance_response(EntranceRequest *respondee, unsigned attendant_port)
+void send_entrance_response(unsigned send_port, EntranceRequest *respondee,
+                            unsigned attendant_port)
 {
   using asio::buffer;
   using asio::ip::udp;
@@ -130,7 +129,7 @@ void send_entrance_response(EntranceRequest *respondee, unsigned attendant_port)
   EntranceResponse to_send;
   to_send.port = attendant_port;
 
-  udp::endpoint local_endpoint(udp::v4(), 0);
+  udp::endpoint local_endpoint(udp::v4(), send_port);
   udp::endpoint remote_endpoint = make_endpoint(respondee->host,
                                                 respondee->port);
 

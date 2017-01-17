@@ -1,6 +1,4 @@
-extern "C" {
 #include "attendant.h"
-}
 
 #include <iostream>
 
@@ -14,18 +12,28 @@ struct Attendant
   }
 };
 
+void standard_destructor(Data *target)
+{
+  delete target->buffer;
+  delete target;
+}
+
 static Data *create_data(char *buffer, size_t length)
 {
   Data *ret = new Data;
   ret->length = length;
   ret->buffer = buffer;
-  ret->destruct = [](Data target) { delete target.buffer; delete target; };
+  ret->destructor = standard_destructor;
   return ret;
 }
 
-Attendant *start(SendData send_data, WaitForData wait_for_data)
+Attendant *init(SendData send_data, WaitForData wait_for_data)
 {
   return new Attendant(send_data, wait_for_data);
+}
+
+void start()
+{
 }
 
 bool validate_data(Attendant *, const Data *)
@@ -41,23 +49,18 @@ static Data *ensure_null_character(Data *data)
   {
     char *buffer = new char[data->length + 1];
     buffer[data->length] = '0';
-
-    Data *ret = new Data;
-    ret->length = data->length + 1;
-    ret->buffer = buffer;
-    ret
-    return ret;
+    return create_data(buffer, data->length + 1);
   }
 }
 
 Data *transform_incoming_data(Attendant *, Data *data)
 {
-  return ensure_null_character(*data);
+  return ensure_null_character(data);
 }
 
 Data *transform_outgoing_data(Attendant *, Data *data)
 {
-  return ensure_null_character(*data);
+  return ensure_null_character(data);
 }
 
 void receive_data(Attendant *, Data data)

@@ -67,3 +67,8 @@ function debug()
   fi
 }
 
+function install()
+{
+  sudo cp $CAPSTONE_DIR/build/lib/butler/libbutler.so /usr/lib
+}
+
