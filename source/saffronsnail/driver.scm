@@ -2,7 +2,7 @@
 -e main -s
 !#
 
-(add-to-load-path (dirname (current-filename)))
+(add-to-load-path (dirname (dirname (current-filename))))
 (display %load-path) (newline)
 
 (use-modules (saffronsnail butler)

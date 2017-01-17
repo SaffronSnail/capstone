@@ -56,10 +56,9 @@
     ; this function dispatcher is an 'instance' of the attendant
     (lambda (func . args)
       (cond
-        ((eq? 'start func) (logmsg "fake called start"))
-                           ;(start attendant (first args))))
-        ((eq? 'stop  func) (logmsg "fake called stop" ))
-                           ;(stop attendant)))
+        ((eq? 'start func) (start attendant (first args)))
+                           
+        ((eq? 'stop  func) (stop attendant))
         ((eq? 'port  func) (warn (string-append "need to determine port number"
                                                 "in make-attendant"))
                                  0
@@ -68,10 +67,9 @@
         ; I'm not sure we ever want to call these from scheme, but we might and
         ; we need to make sure that these functions don't get garbage-collected
         ; anyway, since we pass them as callbacks to c code
-        ((eq? 'send-data func) (logmsg "fake called send-data"))
-                                       ;(send-data (first args))))
-        ((eq? 'wait-for-data func) (logmsg "fake called wait-for-data"))
-                                           ;(wait-for-data)))
+        ((eq? 'send-data func) (send-data (first args)))
+        ((eq? 'wait-for-data func) (wait-for-data))
+                                           
         (else (error (string-append "did not recognize request for function "
                                     (symbol->string func))
               )
