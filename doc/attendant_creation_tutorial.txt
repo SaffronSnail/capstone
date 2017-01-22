@@ -1,0 +1,110 @@
+Creating an Attendant module involves writing a program which conforms to the
+interface specified by the attendant header file, located at
+source/saffronsnail/attendant/attendant.h. The most straightforward way to
+write a module is to create a c++ file which includes this header. This is the
+strategy that this tutorial will take in order to construct a simple echo server.
+Note that this tutorial requires a c++ compiler that supports c++11.
+
+There are two parts to the Attendant interface: the Attendant structure and the
+6 required functions. Butler only refers to Attendants by poninter and never
+references members directly, so the Attendant structure may contain whatever
+is needed by the module. However, the vast majority of (if not all) modules
+will store the SendData and WaitForData callbacks in this structure:
+
+struct Data
+{
+  SendData send_data;
+  WaitForData wait_for_data;
+
+  Attendant(SendData s, WaitForData w) : send_data(s), wait_for_data(w)
+  {}
+};
+
+There are 6 functions to implement: init, start, validate_data,
+transform_incoming_data, transform_outgoing_data, and stop. They are listed in
+the order that they are called, roughly, and it makes sense to implement them in
+this order as well.
+
+The init function essentially acts as a constructor for the module-defined
+Attendant structure. Remember that it is invalid to call either of the callbacks
+passed in during initialization as the port may not fully be set up; this
+initializes the Attendant module, not the connection with the user.
+
+Attendant *init(SendData send_data, WaitFOrData wait_for_data)
+{
+  return new Attendant(send_data, wait_for_data);
+}
+
+The start function signals to the Attendant module that data can now be sent
+and received. This function may contain arbitrary code that defines what happens
+when the module and the user are first connected (for instance, if the server
+wants to negotiate a bandwith limit that would probably be done when start is
+called). Since we are implementing an echo server, all we need to do in start is
+begin waiting for data.
+
+void start(Attendant *att)
+{
+  att->wait_for_data();
+}
+
+The validate_data function can be used to ensure that data is well-formed. We will
+be printing all of our data to std::out, so we want to ensure that every piece of
+data has a null at the end.
+
+bool validate_data(Attendant *, const Data *data)
+{
+  return data->buffer[data->length - 1] == '\0';
+}
+
+In most modules, transform_incoming_data and transform_outgoing_data will either
+have empty definitions, or definitions that are inverse of each other. However, we
+want to ensure that there is a null character at the end of every buffer, so we will
+define a helper function that both of these call.
+
+static Data *ensure_null_character(Data *data)
+{
+  if (data->buffer[data->length - 1] == '\0')
+    return data;
+  else
+  {
+    char *buffer = new char[data->length + 1];
+    buffer[data->length] = '0';
+    auto ret = create_data(buffer, data->length + 1);
+    data->destructor(data);
+    return ret;
+  }
+}
+
+Data *transform_incoming_data(Attendant *, Data *data)
+{
+  return ensure_null_character(data);
+}
+
+Data *transform_outgoing_data(Attendant *, Data *data)
+{
+  return ensure_null_character(data);
+}
+
+Next, there is the receive_data function. This will be called as soon as data from
+the client is available after wait_for_data has been called.
+
+void receive_data(Attendant *att, Data data)
+{
+  std::cout << data.buffer << std::endl;
+  att->send_data(&data);
+  att->wait_for_data();
+}
+
+Finally the stop function must be implemented. Just as init is the constructor for
+Attendant modules, stop is the destructor, though if any signals need to be sent
+to the client when the module is stopped then that should be done here as well.
+
+void stop(Attendant *att)
+{
+  delete att;
+}
+
+And now you have a complete Attendant module! In order to use the module you must
+compile it as a shared object and place the resulting file onto the system load
+path. For the full source listing see source/saffronsnail/attendant/echo.cpp.
+

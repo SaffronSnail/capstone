@@ -12,18 +12,12 @@ struct Attendant
   }
 };
 
-void standard_destructor(Data *target)
-{
-  delete target->buffer;
-  delete target;
-}
-
 static Data *create_data(char *buffer, size_t length)
 {
   Data *ret = new Data;
   ret->length = length;
   ret->buffer = buffer;
-  ret->destructor = standard_destructor;
+  ret->destructor = [] (Data *d) { delete d->buffer; delete d; };
   return ret;
 }
 
@@ -32,13 +26,14 @@ Attendant *init(SendData send_data, WaitForData wait_for_data)
   return new Attendant(send_data, wait_for_data);
 }
 
-void start()
+void start(Attendant *att)
 {
+  att->wait_for_data();
 }
 
-bool validate_data(Attendant *, const Data *)
+bool validate_data(Attendant *, const Data *data)
 {
-  return true;
+  return data->buffer[data->length - 1] == '\0';
 }
 
 static Data *ensure_null_character(Data *data)
@@ -49,7 +44,9 @@ static Data *ensure_null_character(Data *data)
   {
     char *buffer = new char[data->length + 1];
     buffer[data->length] = '0';
-    return create_data(buffer, data->length + 1);
+    auto ret = create_data(buffer, data->length + 1);
+    data->destructor(data);
+    return ret;
   }
 }
 
@@ -63,9 +60,11 @@ Data *transform_outgoing_data(Attendant *, Data *data)
   return ensure_null_character(data);
 }
 
-void receive_data(Attendant *, Data data)
+void receive_data(Attendant *att, Data data)
 {
   std::cout << data.buffer << std::endl;
+  att->send_data(&data);
+  att->wait_for_data();
 }
 
 void stop(Attendant *me)

@@ -8,7 +8,9 @@
 ; this is the 'main' of this file; it waits for someone to connect, reads the
 ; attendant request, and migrates the connection to a different port so that
 ; it can continue listening; there is currently no 'clean' way to close this,
-; just ctrl-c at the terminal
+; just ctrl-c at the terminal; note that Attendants must be a shared object
+; contained in a directory on the system load path in order for butler to find
+; them.
 (define* (run-butler-listener #:key (send-port 8080) (recv-port 8081)
                               (run-continuous? #t)
          )
